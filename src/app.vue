@@ -5,15 +5,15 @@
             <select class="col-xs-12" v-model="selectedCity" @change="getMeteo()">
                 <option v-for="(city, key) in cities" :value="key">{{ city.nm }}</option>
             </select>
-            <div class="col-xs-12">
-                <div class="current-day-meteo" v-if="currentDayMeteo" >
+            <div class="col-xs-12 current-day-meteo">
                     <div class="text-center title city">{{ city.nm }}</div>
-                    <div class="col-xs-12 text-center weather" :class="todayWeather"></div>
-                    <div class="text-center temp"> {{ todayTemperature }}</div>
-                </div>
-                <div v-else>
-                    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
-                </div>
+                    <div v-if="currentDayMeteo" >
+                        <div class="col-xs-12 text-center weather" :class="todayWeather"></div>
+                        <div class="text-center temp"> {{ todayTemperature }}</div>
+                    </div>
+                    <div class="text-center" v-else>
+                        <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+                    </div>
 
                 <next-day
                     :minTemperature="typeof nextDayMeteo[n] !== 'undefined' ? Math.floor(nextDayMeteo[n].main.temp_min) : 0"
@@ -21,7 +21,7 @@
                     :idWeather="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].weather[0].id : 0"
                     :loading="nextDayMeteo.length < 2"
                     :nb="nextDayMeteo.length"
-                    :time="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].dt_txt : ''"
+                    :time="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].dt_txt : Date.now() + (86400000 * (n+1))"
                     v-for="n in [0,1,2]"
                 >{{n}}
                 </next-day>
@@ -130,6 +130,8 @@
     #weatherBlock {
         background: $bg-color;
         color: white;
+        padding-top: 10px;
+        border-radius: 3px;
 
         label {
             display: inline-block;
