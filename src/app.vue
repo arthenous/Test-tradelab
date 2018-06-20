@@ -16,12 +16,11 @@
                     </div>
 
                 <next-day
-                    :minTemperature="typeof nextDayMeteo[n] !== 'undefined' ? Math.floor(nextDayMeteo[n].main.temp_min) : 0"
-                    :maxTemperature="typeof nextDayMeteo[n] !== 'undefined' ? Math.floor(nextDayMeteo[n].main.temp_max)  : 0"
-                    :idWeather="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].weather[0].id : 0"
+                    :minTemperature="typeof nextDayMeteo[n] !== 'undefined' ? Math.floor(nextDayMeteo[n].min_temp) : 0"
+                    :maxTemperature="typeof nextDayMeteo[n] !== 'undefined' ? Math.floor(nextDayMeteo[n].max_temp)  : 0"
+                    :idWeather="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].weather : 0"
                     :loading="nextDayMeteo.length < 2"
-                    :nb="nextDayMeteo.length"
-                    :time="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].dt_txt : Date.now() + (86400000 * (n+1))"
+                    :dayDate="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].dayDate : (new Date(86400000 * n)).toDateString().substr(0,3)"
                     v-for="n in [0,1,2]"
                 >{{n}}
                 </next-day>
@@ -72,7 +71,7 @@
 
                 // On va appeler l'api openceathermap pour récupérer la météo du jour.
                 $.ajax({
-                    url: '//api.openweathermap.org/data/2.5/weather?appid=0039723af85bfb77a34e42c0fbea5b5e&units=metric&id=' + this.city.id,
+                    url: 'http://api.openweathermap.org/data/2.5/weather?appid=0039723af85bfb77a34e42c0fbea5b5e&units=metric&id=' + this.city.id,
                     dataType: 'json',
                     success: (json) => {
                         _this.currentDayMeteo = json;
@@ -86,24 +85,68 @@
 
                 // On va appeler l'api openceathermap pour récupérer les prévisons
                 // météo pour les prochains jours.
-                let currentDate = new Date();
                 $.ajax({
-                    url: '//api.openweathermap.org/data/2.5/forecast?appid=0039723af85bfb77a34e42c0fbea5b5e&units=metric&id=' + this.city.id,
+                    url: 'http://api.openweathermap.org/data/2.5/forecast?appid=0039723af85bfb77a34e42c0fbea5b5e&units=metric&id=' + this.city.id,
                     dataType: 'json',
                     success: (json) => {
-                        json.list.forEach(function(data) {
-                            let date = new Date(data.dt_txt);
+                        // Stocke la date actuelle
+                        let currentDate = new Date();
 
-                            // L'api renvoie une liste de prévision méteo dans un ordres chronologique avec un intervalle de 3 heures.
-                            // Donc si la date change, c'est qu'on est au lendemain.
-                            // On prendra la première prévision à partir de 12h00.
+                        // Stocke la date du précedent jour parcouru
+                        let dateN1 = new Date();
+
+                        // Stocke la température min pour la journée
+                        let min_temp = 0;
+
+                        // Stocke la température max pour la journée
+                        let max_temp = 0;
+
+                        // Stocke l'enssemble des weather de la journée
+                        // on selectionnera ensuite le weather le plus représenté
+                        // dans le tableau pour afficher le temps de la journée.
+                        let weather  = [];
+
+                        // Fonction qui s'occupera d'extraire le weather le plus représenté dans le tableau.
+                        function averageWeather(arr){
+                            return arr.sort((a,b) =>
+                                  arr.filter(v => v===a).length
+                                - arr.filter(v => v===b).length
+                            ).pop();
+                        }
+
+                        json.list.forEach(function(data) {
+                            let parsingDate = new Date(data.dt_txt);
+
+                            // On a changer de date, il faut donc envoyer les températures min et max
+                            // et ensuite le ré-initialisé.
                             if (
-                                currentDate.getDate() != date.getDate()
-                                && date.getHours() >= 12
+                                dateN1.getDate() !== parsingDate.getDate()
                                 && _this.nextDayMeteo.length < 3
                             ) {
-                                _this.nextDayMeteo.push(data);
-                                currentDate = date;
+                                //On sauvegarde les donnée pour la journée.
+                                if (dateN1.getDate() !== currentDate.getDate()) {
+                                    _this.nextDayMeteo.push({
+                                        min_temp,
+                                        max_temp,
+                                        'weather': averageWeather(weather),
+                                        'dayDate': dateN1.toDateString().substr(0,3)
+                                    });
+                                }
+
+                                //On ré-initalise les variables
+                                dateN1 = parsingDate;
+                                min_temp = data.main.temp;
+                                max_temp = data.main.temp;
+                                weather = [];
+                                weather.push(data.weather[0].id);
+                            } else {
+                                if (min_temp > data.main.temp) {
+                                    min_temp = data.main.temp;
+                                }
+                                if (max_temp < data.main.temp) {
+                                    max_temp = data.main.temp;
+                                }
+                                weather.push(data.weather[0].id);
                             }
 
                         });

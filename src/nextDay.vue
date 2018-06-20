@@ -1,10 +1,10 @@
 <template>
         <div class="col-xs-4 no-padding text-center">
-            <div class="title">{{ day }}</div>
+            <div class="title">{{ dayDate }}</div>
             <div v-if="!loading">
                 <div :class="weather"></div>
-                <div> {{ minTemperature }}°</div>
                 <div> {{ maxTemperature }}°</div>
+                <div> {{ minTemperature }}°</div>
             </div>
             <div v-else>
                 <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
@@ -19,9 +19,6 @@
             }
         },
         props: {
-            nb: {
-                type: Number
-            },
             minTemperature: {
                 type: Number,
                 required: true
@@ -38,7 +35,7 @@
                 type: Boolean,
                 required: true
             },
-            time: {
+            dayDate: {
                 type: String,
                 required: true
             }
@@ -46,13 +43,6 @@
         computed: {
             weather: function() {
                 return 'wi wi-icon-' + this.idWeather;
-            },
-            day: function() {
-                // La fonction renvoie juste les 3 premières
-                // lettre du jour.
-                let date = new Date(this.time);
-
-                return date.toDateString().substr(0,3);
             }
         }
     }
