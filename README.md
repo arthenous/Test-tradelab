@@ -8,3 +8,5 @@ Pour tester le projet vous pouvez suivre la procédure suivante:
  > npm install
  * Une fois l'installation terminé, tapez la commande suivante pour tester le projet
  > npm run dev
+
+Ou alors vous pouvez décompiler l'archive "solution.zip" et lancer le fichier index.html dans votre navigateur.
