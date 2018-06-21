@@ -22,6 +22,7 @@
                     :loading="nextDayMeteo.length < 2"
                     :dayDate="typeof nextDayMeteo[n] !== 'undefined' ? nextDayMeteo[n].dayDate : (new Date(86400000 * n)).toDateString().substr(0,3)"
                     v-for="n in [0,1,2]"
+                    :key="n"
                 >{{n}}
                 </next-day>
             </div>
